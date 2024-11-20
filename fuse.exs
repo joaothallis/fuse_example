@@ -5,16 +5,22 @@ defmodule Server do
 
   defp fuse_middleware(url),
     do: [
-      {Tesla.Middleware.Fuse,
-       name: url,
-       opts: {{:standard, 2, 10_000}, {:reset, 60_000}},
-       keep_original_error: true,
-       should_melt: fn
-         {:ok, %{status: status}} when status >= 300 -> true
-         {:ok, _} -> false
-         {:error, _} -> true
-       end,
-       mode: :sync}
+      {
+        Tesla.Middleware.Fuse,
+        # it's import to set a name for the fuse so if one url fails, the fuse 
+        # will blow only for that url/name
+        # installs fuse that will blow if there are 2 failures in 10 seconds
+        # and reset after 60 more seconds
+        name: url,
+        opts: {{:standard, 2, 10_000}, {:reset, 60_000}},
+        keep_original_error: true,
+        should_melt: fn
+          {:ok, %{status: status}} when status >= 300 -> true
+          {:ok, _} -> false
+          {:error, _} -> true
+        end,
+        mode: :sync
+      }
     ]
 
   def requests do
